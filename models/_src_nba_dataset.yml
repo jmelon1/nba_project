@@ -1,0 +1,26 @@
+sources:
+  - name: nba_database
+    description: Historical NBA data spanning 1946-2011, sourced from Kaggle and loaded into BigQuery
+    database: nba-database-497500
+    schema: nba_dataset
+    tables:
+      - name: basketball_abbreviations
+      - name: coach_awards
+        description: Coach of the Year award records by season
+      - name: player_awards
+        description: Individual player award records including MVP, All-NBA, and All-Star selections
+      - name: coaches
+        description: Season level coaching records including wins, losses, and stint information
+      - name: drafts
+        description: NBA draft picks including round, overall selection, and college or country of origin
+      - name: hall_of_fame
+        description: Hall of fame inductees including players, coaches, and other contributors
+      - name: bios
+        description: Player biographical information including position, college, and birth details
+      - name: all_star_data
+        description: Player performance stats from NBA All-Star game appearances
+      - name: playoff_results
+        description: Series level playoff results including winner, loser, round, and series record
+      - name: team_results
+        description: Season level team performance including offensive, defensive, and record statistics
+    
