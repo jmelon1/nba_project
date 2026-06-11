@@ -23,7 +23,6 @@ clean_seasons as (
         games_coached,
         playoff_wins,
         playoff_losses
-
     from coaches
     where stint = 1
     and season_year not in (
