@@ -8,7 +8,7 @@ select
     height,
     weight,
     college,
-    FORMAT_DATE('%d/%m/%Y', PARSE_DATE('%Y/%m/%d', birthDate)) as birth_date,
+    PARSE_DATE('%Y/%m/%d', birthDate) as birth_date,
     birthCity as birth_city,
     birthState as birth_state,
     birthCountry as birth_country,
