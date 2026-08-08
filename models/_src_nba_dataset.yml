@@ -1,6 +1,12 @@
+version: 2
+
 sources:
   - name: nba_database
-    description: Historical NBA data spanning 1946-2011, sourced from Kaggle and loaded into BigQuery
+    description: >
+      Historical NBA data covering seasons from 1946 to 2011, sourced from 
+      Kaggle (https://www.kaggle.com/datasets/open-source-sports/mens-professional-basketball).
+      Contains player bios, awards, draft history, regular season and playoff 
+      results, coach records, and Hall of Fame data
     database: nba-database-497500
     schema: nba_dataset
     tables:

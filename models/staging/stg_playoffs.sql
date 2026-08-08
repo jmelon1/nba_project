@@ -1,6 +1,6 @@
 select
 
-    year as season_year,
+    year + 1 as playoff_year,
     round as playoff_round,
     tmIDWinner as winner_team_id,
     lgIDWinner as winner_league_id,
