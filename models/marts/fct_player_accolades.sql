@@ -28,11 +28,14 @@ all_star as (
 
 hof as (
     select
-        full_name,
-        induction_year,
-        category,
+        hof_id,
+        any_value(full_name) as full_name,
+        any_value(induction_year) as induction_year,
+        any_value(category) as category,
         true as inducted_to_hof
     from {{ ref('stg_hof') }}
+    where category = 'Player'
+    group by hof_id
 ),
 
 bios as (
@@ -89,7 +92,7 @@ from bios b
 left join awards a on b.bio_id = a.player_id
 left join all_star s on b.bio_id = s.player_id
 left join draft d on b.bio_id = d.player_id
-left join hof h on concat(b.first_name, ' ', b.last_name) = h.full_name
+left join hof h on b.bio_id = h.hof_id
 where a.player_id is not null
 or s.player_id is not null
 or d.player_id is not null

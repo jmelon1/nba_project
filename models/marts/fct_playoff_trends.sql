@@ -1,6 +1,6 @@
 with playoffs as (
     select
-        season_year,
+        playoff_year,
         playoff_round,
         winner_team_id,
         loser_team_id,
@@ -35,6 +35,16 @@ team_results as (
     where made_playoffs = true
 ),
 
+league_size as (
+    select
+        season_year,
+        count(distinct team_id) as total_teams_that_year
+
+    from {{ ref('stg_reg_season') }}
+
+    group by season_year
+),
+
 coaches as (
     select
         coach_id,
@@ -48,7 +58,7 @@ coaches as (
 
 playoff_runs as (
     select
-        season_year,
+        playoff_year,
         winner_team_id as team_id,
         case playoff_round
         when 'RR' then 1
@@ -71,7 +81,7 @@ playoff_runs as (
     union all
 
     select
-        season_year,
+        playoff_year,
         loser_team_id as team_id,
         case playoff_round
             when 'RR' then 1
@@ -86,53 +96,70 @@ playoff_runs as (
             else 0
         end as round_order,
         0 as series_won,
-        series_wins as total_series_wins,
-        series_losses as total_series_losses
+        series_losses as total_series_wins,
+        series_wins as total_series_losses
 
     from playoffs
 ),
 
 team_playoff_summary as (
     select
-        season_year,
+        playoff_year,
         team_id,
         max(round_order) as deepest_round_order,
         sum(series_won) as series_won,
         sum(total_series_wins) as total_series_wins,
         sum(total_series_losses) as total_series_losses,
-
         case
             when team_id in (
                 select winner_team_id from playoffs
                 where playoff_round = 'F'
-                and season_year = playoff_runs.season_year
+                and playoff_year = playoff_runs.playoff_year
                 union all
                 select loser_team_id from playoffs
                 where playoff_round = 'F'
-                and season_year = playoff_runs.season_year
+                and playoff_year = playoff_runs.playoff_year
             ) then true
             else false
         end as reached_finals,
-
         case 
             when team_id in (
                 select winner_team_id 
                 from playoffs 
                 where playoff_round = 'F'
-                and season_year = playoff_runs.season_year
+                and playoff_year = playoff_runs.playoff_year
             ) then true 
             else false 
         end as won_championship
-        
+
     from playoff_runs
-    group by season_year, team_id
+
+    group by playoff_year, team_id
+),
+
+team_playoff_summary_with_max as (
+    select
+        *,
+        max(deepest_round_order) over (partition by playoff_year) as max_round_order_that_year
+
+    from team_playoff_summary
+),
+
+team_playoff_summary_normalized as (
+    select
+        *,
+        7 - (max_round_order_that_year - deepest_round_order) as deepest_round_normalized
+    from team_playoff_summary_with_max
 )
 
 select
 
-    tp.season_year,
+    tp.playoff_year,
+    ls.total_teams_that_year,
     tp.team_id,
     tp.deepest_round_order,
+    tp.max_round_order_that_year,
+    tp.deepest_round_normalized,
     tr.team_name,
     tr.conference_id,
     tr.division_id,
@@ -154,19 +181,28 @@ select
     tp.reached_finals,
     tp.won_championship,
     case
-        when tp.season_year < 1960 then '1940s-1950s'
-        when tp.season_year < 1970 then '1960s'
-        when tp.season_year < 1980 then '1970s'
-        when tp.season_year < 1990 then '1980s'
-        when tp.season_year < 2000 then '1990s'
-        when tp.season_year < 2010 then '2000s'
+        when tp.playoff_year < 1960 then '1940s-1950s'
+        when tp.playoff_year < 1970 then '1960s'
+        when tp.playoff_year < 1980 then '1970s'
+        when tp.playoff_year < 1990 then '1980s'
+        when tp.playoff_year < 2000 then '1990s'
+        when tp.playoff_year < 2010 then '2000s'
         else '2010s'
-    end as era,
+    end as playoff_decade,
+    case
+        when not(tr.conference_id is null) then tr.conference_id
+        when tr.division_id = 'ED' then 'EC'
+        when tr.division_id = 'WD' or tr.division_id = 'CD' then 'WC'
+        when tp.team_id = 'LAL' and tp.playoff_year = 1983 then 'WC'
+        else 'Unknown'
+    end as conference_normalized,
     tr.team_points - tr.opponent_points as season_point_differential
-from team_playoff_summary tp
+from team_playoff_summary_normalized tp
 left join team_results tr
     on tp.team_id = tr.team_id
-    and tp.season_year = tr.season_year
+    and tp.playoff_year = tr.season_year + 1
 left join coaches c
     on tp.team_id = c.team_id
-    and tp.season_year = c.season_year
+    and tp.playoff_year = c.season_year + 1
+left join league_size ls
+    on tp.playoff_year = ls.season_year + 1

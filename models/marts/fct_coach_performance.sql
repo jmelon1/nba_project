@@ -13,25 +13,6 @@ with coaches as (
     from {{ ref('stg_coach_info') }}
 ),
 
-clean_seasons as (
-    select
-        coach_id,
-        season_year,
-        team_id,
-        season_wins,
-        season_losses,
-        games_coached,
-        playoff_wins,
-        playoff_losses
-    from coaches
-    where stint = 1
-    and season_year not in (
-        select distinct season_year
-        from coaches
-        where stint > 1
-    )
-),
-
 team_results as (
     select
         team_id,
@@ -70,6 +51,7 @@ coach_awards as (
 
 hof as (
     select
+        hof_id,
         full_name,
         induction_year,
         true as inducted_to_hof
@@ -82,6 +64,11 @@ hof as (
 career_totals as (
     select
         c.coach_id,
+        case 
+            when b.first_name is not null 
+            then b.first_name || ' ' || b.last_name
+            else c.coach_id
+        end as coach_name,
         count(distinct c.season_year) as seasons_coached,
         count(distinct c.team_id) as teams_coached,
         sum(c.season_wins) as career_wins,
@@ -113,12 +100,15 @@ career_totals as (
         countif(t.playoff_round = 'F') as finals_appearances,
         sum(t.attendance) as total_attendance
 
-    from clean_seasons c
+    from coaches c
     left join team_results t
         on c.team_id = t.team_id
         and c.season_year = t.season_year
+        and c.stint = 1
+    left join {{ ref('stg_bios') }} b
+        on c.coach_id = b.bio_id
 
-    group by c.coach_id
+    group by c.coach_id, coach_name
 ),
 
 scored as (
@@ -141,7 +131,7 @@ scored as (
 
     from career_totals ct
     left join coach_awards ca on ct.coach_id = ca.coach_id
-    left join hof h on ct.coach_id = h.full_name
+    left join hof h on ct.coach_id = h.hof_id
 )
 
 select * from scored

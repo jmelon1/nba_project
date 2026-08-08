@@ -7,12 +7,14 @@ models:
         data_tests:
           - unique
           - not_null
+      - name: coach_name
+        description: Full names of coaches derived from stg_bios via player ID match. Falls back to coach_id for coaches with no playing career on record
       - name: career_win_pct
         description: Career wins divided by career games coached, rounded to 3 decimal places
       - name: playoff_appearance_rate
         description: Proportion of seasons coached where team made the playoffs
       - name: coach_score
-        description: Weighted career achievement score combining awards, playoff appearances, and win percentage thresholds
+        description: Weighted career achievement score, see methodology section in README
 
   - name: fct_player_accolades
     description: Career aggregated player accolades including awards, all star appearances, and HOF status
@@ -33,6 +35,7 @@ models:
         description: Foreign key to stg_bios
         data_tests:
           - not_null
+          - unique
       - name: draft_overall_pick
         description: Overall selection number across all rounds, used as primary draft ranking variable
         data_tests:
@@ -43,6 +46,8 @@ models:
         description: Average draft pick score across all players in the same draft year
       - name: total_class_score
         description: Sum of all draft pick scores for players in the same draft year
+      - name: notable_players_at_pick
+        description: Top 3 players selected at given overall pick number
 
   - name: fct_playoff_trends
     description: Team level playoff performance per season including deepest round, championship, and regular season context
@@ -56,8 +61,8 @@ models:
         data_tests:
           - not_null
       - name: deepest_round_order
-        description: Numeric representation of deepest playoff round reached, 1 (first round) through 7 (Finals)
-      - name: era
+        description: Numeric representation of deepest playoff round reached
+      - name: decade
         description: Decade bucket for trend analysis, derived from season_year
       - name: won_championship
         description: True if team won the Finals series in that season
