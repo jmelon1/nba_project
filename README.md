@@ -117,7 +117,7 @@ The 1983 Lakers playoff year has a failed join to `team_results`, where team nam
 `draft_overall_pick` is unavailable (recorded as 0) for most drafts prior to 1957, for all territorial picks (1949–1965), and for 1976 ABA dispersal-draft selections. These players are correctly included in class-level scoring (`avg_class_score`, `total_class_score`), which doesn't depend on pick number, but are excluded from the per-pick draft chart (filtered to picks 1–60).
 
 **General Limitations**
-- Players who were drafted but never played in the NBA have a score of 0 by definition, which naturally pulls down expected value at lower pick numbers
+- Players who were drafted but never played in the NBA have a `draft_pick_score` of 0 by definition, which naturally pulls down expected value at lower pick numbers
 - Weight values are a modeling choice and can be adjusted to reflect alternative definitions of player/coach value
 - The source `games` column in `team_results` contains zero values for 2009-2012 seasons. Games played is instead derived by summing home and away wins and losses, which produces accurate results for all seasons in the dataset.
 
